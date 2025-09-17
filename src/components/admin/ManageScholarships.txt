@@ -1,0 +1,173 @@
+import React, { useState } from 'react';
+import { Plus, Edit3, Trash2, Award, Calendar, DollarSign, Users } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import ScholarshipModal from './ScholarshipModal';
+
+const ManageScholarships = () => {
+  const { scholarships, addScholarship, updateScholarship } = useData();
+  const [showModal, setShowModal] = useState(false);
+  const [editingScholarship, setEditingScholarship] = useState(null);
+
+  const handleAddScholarship = () => {
+    setEditingScholarship(null);
+    setShowModal(true);
+  };
+
+  const handleEditScholarship = (scholarship) => {
+    setEditingScholarship(scholarship);
+    setShowModal(true);
+  };
+
+  const handleSubmit = (scholarshipData) => {
+    if (editingScholarship) {
+      updateScholarship(editingScholarship.id, scholarshipData);
+    } else {
+      addScholarship(scholarshipData);
+    }
+    setShowModal(false);
+    setEditingScholarship(null);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'expired':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Manage Scholarships</h1>
+          <p className="text-gray-600 mt-1">Create and manage scholarship programs</p>
+        </div>
+        <button
+          onClick={handleAddScholarship}
+          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 transform hover:scale-[1.02]"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Scholarship</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {scholarships.map((scholarship, index) => (
+          <div
+            key={scholarship.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-3 rounded-lg">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{scholarship.title}</h3>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(scholarship.status)}`}>
+                    {scholarship.status.charAt(0).toUpperCase() + scholarship.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditScholarship(scholarship)}
+                  className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <p className="text-gray-600 mb-4 text-sm">{scholarship.description}</p>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center text-gray-600">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  <span>Amount</span>
+                </div>
+                <span className="font-semibold text-green-600">{scholarship.amount}</span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>Application Period</span>
+                </div>
+                <span className="text-gray-900">
+                  {new Date(scholarship.startDate).toLocaleDateString()} - {new Date(scholarship.endDate).toLocaleDateString()}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center text-gray-600">
+                  <Users className="w-4 h-4 mr-2" />
+                  <span>Eligible Courses</span>
+                </div>
+                <span className="text-gray-900">
+                  {scholarship.courses.includes('all') ? 'All Courses' : `${scholarship.courses.length} courses`}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Requirements:</span>
+                <ul className="mt-1 space-y-1">
+                  {scholarship.requirements.slice(0, 2).map((req, idx) => (
+                    <li key={idx} className="flex items-center">
+                      <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>
+                      {req}
+                    </li>
+                  ))}
+                  {scholarship.requirements.length > 2 && (
+                    <li className="text-gray-500">+{scholarship.requirements.length - 2} more...</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {scholarships.length === 0 && (
+        <div className="text-center py-12">
+          <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No scholarships yet</h3>
+          <p className="text-gray-600 mb-4">Create your first scholarship program to get started.</p>
+          <button
+            onClick={handleAddScholarship}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 mx-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add First Scholarship</span>
+          </button>
+        </div>
+      )}
+
+      {showModal && (
+        <ScholarshipModal
+          scholarship={editingScholarship}
+          onSubmit={handleSubmit}
+          onClose={() => {
+            setShowModal(false);
+            setEditingScholarship(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ManageScholarships;
