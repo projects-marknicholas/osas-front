@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, Award, Calendar, DollarSign, Users, Search } from 'lucide-react';
 import { createScholarship, getScholarships, updateScholarship, deleteScholarship } from '../../api/admin';
 import Swal from 'sweetalert2';
+import Modal from './modals/ModalParent';
+import ScholarshipForm from './modals/ScholarshipModal';
 
 const ManageScholarships = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -79,7 +81,18 @@ const ManageScholarships = () => {
   };
 
   const handleEditScholarship = (scholarship) => {
-    setEditingScholarship(scholarship);
+    // Extract form IDs from the scholarship_forms array
+    const formIds = Array.isArray(scholarship.scholarship_forms) 
+      ? scholarship.scholarship_forms.map(form => form.scholarship_form_id)
+      : [];
+    
+    // Create the editing data with the correct structure
+    const editingData = {
+      ...scholarship,
+      scholarship_form_ids: formIds
+    };
+
+    setEditingScholarship(editingData);
     setShowModal(true);
   };
 
@@ -153,7 +166,7 @@ const ManageScholarships = () => {
       case 'active':
         return 'bg-green-100 text-green-800';
       case 'archive':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -168,9 +181,9 @@ const ManageScholarships = () => {
   const formatAmount = (amount) => {
     if (amount === null || amount === undefined) return 'Not specified';
     
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-PH', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PHP',
       minimumFractionDigits: 0
     }).format(amount);
   };
@@ -180,196 +193,15 @@ const ManageScholarships = () => {
     if (!dateString) return 'Invalid date';
     
     try {
-      return new Date(dateString).toLocaleDateString();
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit'
+      });
     } catch (e) {
       return 'Invalid date';
     }
-  };
-
-  // Simple Scholarship Modal Component
-  const ScholarshipModal = ({ scholarship, onSubmit, onClose }) => {
-    const [formData, setFormData] = useState({
-      scholarship_title: scholarship?.scholarship_title || '',
-      description: scholarship?.description || '',
-      start_date: scholarship?.start_date || '',
-      end_date: scholarship?.end_date || '',
-      status: scholarship?.status || 'active',
-      amount: scholarship?.amount || '',
-      course_codes: scholarship?.course_codes || [],
-      scholarship_form_ids: scholarship?.scholarship_form_ids || []
-    });
-
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      onSubmit(formData);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {scholarship ? 'Edit Scholarship' : 'Create Scholarship'}
-              </h2>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Scholarship Title *
-                </label>
-                <input
-                  type="text"
-                  name="scholarship_title"
-                  value={formData.scholarship_title}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date *
-                  </label>
-                  <input
-                    type="date"
-                    name="start_date"
-                    value={formData.start_date}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date *
-                  </label>
-                  <input
-                    type="date"
-                    name="end_date"
-                    value={formData.end_date}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status *
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                  >
-                    <option value="active">Active</option>
-                    <option value="archive">Archive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Course Codes (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  name="course_codes"
-                  value={formData.course_codes.join(', ')}
-                  onChange={(e) => {
-                    const codes = e.target.value.split(',').map(code => code.trim()).filter(Boolean);
-                    setFormData(prev => ({ ...prev, course_codes: codes }));
-                  }}
-                  placeholder="CS101, MATH202, ENG301"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Scholarship Form IDs (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  name="scholarship_form_ids"
-                  value={formData.scholarship_form_ids.join(', ')}
-                  onChange={(e) => {
-                    const ids = e.target.value.split(',').map(id => id.trim()).filter(Boolean);
-                    setFormData(prev => ({ ...prev, scholarship_form_ids: ids }));
-                  }}
-                  placeholder="1, 2, 3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#2d6179] text-white rounded-md hover:bg-[#235067]"
-                >
-                  {scholarship ? 'Update' : 'Create'} Scholarship
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   if (loading && scholarships.length === 0) {
@@ -510,17 +342,48 @@ const ManageScholarships = () => {
                       : 'All courses'}
                   </span>
                 </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center text-gray-600">
+                    <Users className="w-4 h-4 mr-2" />
+                    <span>Scholarship Forms</span>
+                  </div>
+                  <span className="text-gray-900">
+                    {scholarshipForms.length > 0 
+                      ? `${scholarshipForms.length} forms` 
+                      : 'All forms'}
+                  </span>
+                </div>
               </div>
+
+              {courseCodes.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Courses:</span>
+                    <ul className="mt-1 space-y-1">
+                      {courseCodes.slice(0, 2).map((courseCode, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>
+                          {courseCode}
+                        </li>
+                      ))}
+                      {courseCodes.length > 2 && (
+                        <li className="text-gray-500">+{courseCodes.length - 2} more courses...</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
 
               {scholarshipForms.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">Required Forms:</span>
                     <ul className="mt-1 space-y-1">
-                      {scholarshipForms.slice(0, 2).map((formId, idx) => (
+                      {scholarshipForms.slice(0, 2).map((form, idx) => (
                         <li key={idx} className="flex items-center">
                           <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>
-                          Form ID: {formId}
+                          {form.scholarship_form_name || form.scholarship_form_id}
                         </li>
                       ))}
                       {scholarshipForms.length > 2 && (
@@ -588,14 +451,19 @@ const ManageScholarships = () => {
       )}
 
       {showModal && (
-        <ScholarshipModal
-          scholarship={editingScholarship}
-          onSubmit={handleSubmit}
-          onClose={() => {
-            setShowModal(false);
-            setEditingScholarship(null);
-          }}
-        />
+        <Modal
+          isOpen={showModal}
+          onClose={() => { setShowModal(false); setEditingScholarship(null); }}
+          title={editingScholarship ? 'Edit Scholarship' : 'Create Scholarship'}
+          maxWidth="max-w-2xl"
+        >
+          <ScholarshipForm
+            onSubmit={handleSubmit}
+            onCancel={() => { setShowModal(false); setEditingScholarship(null); }}
+            initialData={editingScholarship || {}}
+            isEditing={!!editingScholarship}
+          />
+        </Modal>
       )}
     </div>
   );

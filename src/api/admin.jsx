@@ -412,7 +412,6 @@ export async function getScholarships({ page = 1, limit = 10, search = "" }) {
     );
 
     const data = await res.json();
-    console.log(data);
     if (!res.ok) throw new Error(data.error || "Failed to fetch scholarships");
     return data;
   } catch (err) {
