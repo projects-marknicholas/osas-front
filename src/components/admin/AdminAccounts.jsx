@@ -28,7 +28,17 @@ const AdminAccounts = () => {
       
       if (response.success) {
         setAccounts(response.data);
-        setPagination(response.pagination);
+
+        // Calculate pagination properly
+        const totalPages = response.pagination.total_pages || 1;
+        const currentPage = Math.min(Math.max(1, page), totalPages);
+
+        setPagination({
+          ...response.pagination,
+          current_page: currentPage,
+          has_next: currentPage < totalPages,
+          has_prev: currentPage > 1
+        });
       } else {
         Swal.fire({
           icon: 'error',

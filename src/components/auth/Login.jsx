@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import Swal from 'sweetalert2';
+import { studentLogin } from '../../api/auth';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -15,22 +17,41 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const data = await studentLogin(formData); 
+
+      if (!data.success) {
+        throw new Error(data.message || "Login failed");
+      }
+
       const userData = {
-        id: 1,
-        studentNumber: formData.studentNumber,
-        firstName: 'Juan',
-        lastName: 'Dela Cruz',
-        email: 'juan.delacruz@lspu.edu.ph',
+        id: data.user.id,
+        user_id: data.user.user_id,
+        api_key: data.user.api_key,
+        csrf_token: data.user.csrf_token,
         role: 'student',
-        course: 'Computer Science',
-        yearLevel: '3rd Year'
       };
-      login(userData);
+
+      login(userData); 
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: data.message,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+    } catch (error) {
+      // SweetAlert2 error
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: error.message || 'Invalid student number or password',
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   const handleChange = (e) => {
@@ -45,7 +66,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-full shadow-lg">
+            <div className="bg-gradient-to-r from-[#2bb9c5] to-[#2d6179] p-4 rounded-full shadow-lg">
               <GraduationCap className="w-12 h-12 text-white" />
             </div>
           </div>
@@ -69,7 +90,7 @@ const Login = () => {
                     name="studentNumber"
                     value={formData.studentNumber}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2bb9c5] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
                     placeholder="Enter your student number"
                     required
                   />
@@ -89,7 +110,7 @@ const Login = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2bb9c5] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
                     placeholder="Enter your password"
                     required
                   />
@@ -111,7 +132,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-gradient-to-r from-[#2bb9c5] to-[#2d6179] text-white py-3 px-4 rounded-lg font-medium hover:from-[#25a5b0] hover:to-[#25546a] focus:outline-none focus:ring-2 focus:ring-[#2bb9c5] focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -129,7 +150,7 @@ const Login = () => {
               Don't have an account?{' '}
               <Link
                 to="/register"
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                className="text-[#2d6179] hover:text-[#25546a] font-medium transition-colors"
               >
                 Create Account
               </Link>

@@ -44,7 +44,7 @@ const ManageCourses = () => {
       const res = await getCourses({ page, limit, search: searchTerm });
       if (res.success) {
         setCourses(res.data || []);
-        setTotal(res.total || 0);
+        setTotal(parseInt(res.pagination?.total_items || 0));
       } else {
         setCourses([]);
         showResponse("error", "Error", res.error || "Failed to load courses");

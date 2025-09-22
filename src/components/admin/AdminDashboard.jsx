@@ -9,6 +9,7 @@ import ManageScholarshipForms from './ManageScholarshipForms';
 import ManageCourses from './ManageCourses';
 import ManageDepartments from './ManageDepartments';
 import ManageApplications from './ManageApplications';
+import ManageAnnouncements from './ManageAnnouncements';
 import AdminProfile from './AdminProfile';
 
 const AdminDashboard = () => {
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
             <Route path="/courses" element={<ManageCourses />} />
             <Route path="/departments" element={<ManageDepartments />} />
             <Route path="/applications" element={<ManageApplications />} />
+            <Route path="/announcements" element={<ManageAnnouncements />} />
             <Route path="/profile" element={<AdminProfile />} />
           </Routes>
         </main>

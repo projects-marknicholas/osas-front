@@ -53,7 +53,7 @@ const ManageScholarships = () => {
           setPagination({
             page: response.pagination.current_page || 1,
             limit: response.pagination.per_page || 10,
-            totalItems: response.pagination.total_items || 0,
+            totalItems: parseInt(response.pagination.total_items || 0),
             totalPages: response.pagination.total_pages || 0
           });
         }

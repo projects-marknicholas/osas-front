@@ -5,7 +5,6 @@ import Header from './Header';
 import Profile from './Profile';
 import Scholarships from './Scholarships';
 import Applications from './Applications';
-import Overview from './Overview';
 
 const StudentDashboard = () => {
   return (
@@ -15,7 +14,7 @@ const StudentDashboard = () => {
         <Header />
         <main className="flex-1 overflow-y-auto p-6">
           <Routes>
-            <Route path="/" element={<Overview />} />
+            <Route path="/" element={<Scholarships />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/scholarships" element={<Scholarships />} />
             <Route path="/applications" element={<Applications />} />

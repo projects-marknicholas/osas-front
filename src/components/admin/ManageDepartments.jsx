@@ -40,7 +40,7 @@ const ManageDepartments = () => {
       const res = await getDepartments({ page, limit, search: searchTerm });
       if (res.success) {
         setDepartments(res.data || []);
-        setTotal(res.total || 0);
+        setTotal(parseInt(res.pagination?.total_items || 0));
       } else {
         setDepartments([]);
         showResponse("error", "Error", "Failed to load departments");

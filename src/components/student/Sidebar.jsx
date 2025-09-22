@@ -6,17 +6,16 @@ const Sidebar = () => {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Overview', href: '/dashboard', icon: Home },
-    { name: 'Profile', href: '/dashboard/profile', icon: User },
     { name: 'Scholarships', href: '/dashboard/scholarships', icon: Award },
     { name: 'Applications', href: '/dashboard/applications', icon: FileText },
+    { name: 'Profile', href: '/dashboard/profile', icon: User },
   ];
 
   return (
     <div className="w-64 bg-white shadow-lg border-r border-gray-200">
       <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
+          <div className="bg-gradient-to-r from-[#2bb9c5] to-[#2d6179] p-2 rounded-lg">
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -39,8 +38,8 @@ const Sidebar = () => {
                   to={item.href}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-[#2bb9c5] to-[#2d6179] text-white shadow-md'
+                      : 'text-gray-700 hover:bg-[#2bb9c5]/10 hover:text-[#2d6179]'
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />

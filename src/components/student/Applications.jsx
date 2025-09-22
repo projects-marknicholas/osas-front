@@ -1,214 +1,239 @@
-import React, { useState } from 'react';
-import { FileText, Clock, CheckCircle, XCircle, Eye, Calendar, User } from 'lucide-react';
-import { useData } from '../../contexts/DataContext';
+import React, { useState, useEffect } from 'react';
+import { Calendar, User, AlertCircle, Filter, ChevronDown, Users, Award } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { getApplications } from '../../api/student';
 import { useAuth } from '../../contexts/AuthContext';
-import ApplicationModal from './ApplicationModal';
 
 const Applications = () => {
-  const { applications } = useData();
   const { user } = useAuth();
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [applications, setApplications] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState('pending');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    per_page: 10,
+    total_items: 0,
+    total_pages: 1,
+    has_next: false,
+    has_prev: false,
+  });
 
-  // ✅ Added missing states
-  const [showApplicationModal, setShowApplicationModal] = useState(false);
-  const [selectedScholarship, setSelectedScholarship] = useState(null);
+  const statusOptions = [
+    { key: 'pending', label: 'Pending' },
+    { key: 'approved', label: 'Approved' },
+    { key: 'rejected', label: 'Rejected' },
+  ];
 
-  const userApplications = applications.filter(app => app.studentId === user?.id);
-
-  const filteredApplications = selectedStatus === 'all' 
-    ? userApplications 
-    : userApplications.filter(app => app.status === selectedStatus);
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'submitted': return <FileText className="w-5 h-5 text-blue-600" />;
-      case 'review': return <Clock className="w-5 h-5 text-yellow-600" />;
-      case 'interview': return <User className="w-5 h-5 text-purple-600" />;
-      case 'approved': 
-      case 'granted': return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'rejected': return <XCircle className="w-5 h-5 text-red-600" />;
-      default: return <FileText className="w-5 h-5 text-gray-600" />;
+  const fetchApplications = async (page = 1) => {
+    try {
+      setLoading(true);
+      const response = await getApplications(page, pagination.per_page);
+      if (response.success) {
+        setApplications(response.data);
+        setPagination(response.pagination);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.error || 'Failed to fetch applications',
+          confirmButtonColor: '#2d6179',
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to fetch applications. Please try again.',
+        confirmButtonColor: '#2d6179',
+      });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchApplications(1);
+  }, []);
+
+  const filteredApplications = applications.filter(app => app.status === selectedStatus);
+
+  const statusCounts = {
+    pending: applications.filter(app => app.status === 'pending').length,
+    approved: applications.filter(app => app.status === 'approved').length,
+    rejected: applications.filter(app => app.status === 'rejected').length,
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'submitted': return 'bg-blue-100 text-blue-800';
-      case 'review': return 'bg-yellow-100 text-yellow-800';
-      case 'interview': return 'bg-purple-100 text-purple-800';
-      case 'approved': 
-      case 'granted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-[#2d6179] text-white';
+      case 'approved': return 'bg-green-600 text-white';
+      case 'rejected': return 'bg-red-600 text-white';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const statusCounts = {
-    all: userApplications.length,
-    submitted: userApplications.filter(app => app.status === 'submitted').length,
-    review: userApplications.filter(app => app.status === 'review').length,
-    interview: userApplications.filter(app => app.status === 'interview').length,
-    approved: userApplications.filter(app => app.status === 'approved').length,
-    granted: userApplications.filter(app => app.status === 'granted').length,
-    rejected: userApplications.filter(app => app.status === 'rejected').length,
-  };
-
-  // ✅ Open modal
-  const handleViewApplication = (scholarship) => {
-    setSelectedScholarship(scholarship);
-    setShowApplicationModal(true);
-  };
-
-  // ✅ Example submit handler
-  const handleSubmitApplication = (data) => {
-    console.log("Application submitted:", data);
-    setShowApplicationModal(false);
-    setSelectedScholarship(null);
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
-          <p className="text-gray-600 mt-1">Track the status of your scholarship applications</p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
+        <p className="text-gray-600 mt-1">Track the status of your scholarship applications</p>
       </div>
 
       {/* Status Filter */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex flex-wrap gap-2">
-          {[
-            { key: 'all', label: 'All Applications' },
-            { key: 'submitted', label: 'Submitted' },
-            { key: 'review', label: 'Under Review' },
-            { key: 'interview', label: 'Interview' },
-            { key: 'approved', label: 'Approved' },
-            { key: 'granted', label: 'Granted' },
-            { key: 'rejected', label: 'Rejected' }
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setSelectedStatus(key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedStatus === key
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {label} ({statusCounts[key]})
-            </button>
-          ))}
-        </div>
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 w-full md:w-64">
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2bb9c5]"
+        >
+          <Filter className="w-4 h-4 mr-2" />
+          {statusOptions.find(opt => opt.key === selectedStatus)?.label} ({statusCounts[selectedStatus]})
+          <ChevronDown className="w-4 h-4 ml-2" />
+        </button>
+
+        {isFilterOpen && (
+          <div className="origin-top-right absolute mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+            <div className="py-1">
+              {statusOptions.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setSelectedStatus(key);
+                    setIsFilterOpen(false);
+                  }}
+                  className={`block w-full text-left px-4 py-2 text-sm ${
+                    selectedStatus === key
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  {label} ({statusCounts[key]})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Applications List */}
-      <div className="space-y-4">
-        {filteredApplications.length > 0 ? (
-          filteredApplications.map((application, index) => (
+      {/* Applications Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {loading ? (
+          <div className="col-span-full flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2bb9c5]"></div>
+          </div>
+        ) : filteredApplications.length > 0 ? (
+          filteredApplications.map((app) => (
             <div
-              key={application.id}
+              key={app.application_id}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-lg">
-                    {getStatusIcon(application.status)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {application.scholarshipTitle}
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        <span>Applied on {new Date(application.submittedAt).toLocaleDateString()}</span>
-                      </div>
-                      {application.updatedAt && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Clock className="w-4 h-4 mr-2" />
-                          <span>Last updated {new Date(application.updatedAt).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(application.status)}`}>
-                    {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                  </span>
-                  {/* 👁 Eye button opens modal */}
-                  <button 
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                    onClick={() => handleViewApplication(application)}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
+                  <div className="bg-[#2d6179] p-3 rounded-lg">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{app.scholarship_title}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                      {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Progress Timeline */}
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  {['submitted', 'review', 'interview', 'approved', 'granted'].map((step, stepIndex) => {
-                    const isCompleted = ['submitted', 'review', 'interview', 'approved', 'granted'].indexOf(application.status) >= stepIndex;
-                    const isCurrent = application.status === step;
-                    
-                    return (
-                      <div key={step} className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
-                          isCompleted || isCurrent
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 text-gray-600'
-                        }`}>
-                          {stepIndex + 1}
-                        </div>
-                        {stepIndex < 4 && (
-                          <div className={`w-12 h-1 mx-2 transition-all duration-300 ${
-                            isCompleted && !isCurrent ? 'bg-blue-600' : 'bg-gray-200'
-                          }`} />
-                        )}
-                      </div>
-                    );
-                  })}
+              <p className="text-gray-600 mb-4 text-sm">{app.description}</p>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between text-gray-600">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>Applied on</span>
+                  <span className="text-gray-900 ml-auto">
+                    {new Date(app.applied_at).toLocaleDateString('en-PH')}
+                  </span>
                 </div>
-                <div className="flex justify-between mt-2 text-xs text-gray-600">
-                  <span>Submitted</span>
-                  <span>Review</span>
-                  <span>Interview</span>
-                  <span>Approved</span>
-                  <span>Granted</span>
+
+                <div className="flex items-center justify-between text-gray-600">
+                  <User className="w-4 h-4 mr-2" />
+                  <span>Applicant</span>
+                  <span className="text-gray-900 ml-auto">
+                    {app.first_name} {app.middle_name} {app.last_name} ({app.course})
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-gray-600">
+                  <Users className="w-4 h-4 mr-2" />
+                  <span>Amount</span>
+                  <span className="font-semibold text-green-600 ml-auto">
+                    {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(app.amount)}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between text-gray-600">
+                  <Users className="w-4 h-4 mr-2 mt-1" />
+                  <div className="flex-1">
+                    <span className="block mb-1">Scholarship Forms</span>
+                    {app.forms && app.forms.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-700 space-y-1">
+                        {app.forms.map((form) => (
+                          <li key={form.application_form_id}>
+                            {form.form_name}{' '}
+                            <span className="text-gray-500 text-xs">
+                              ({new Date(form.uploaded_at).toLocaleDateString()})
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No forms submitted</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {selectedStatus === 'all' ? 'No applications yet' : `No ${selectedStatus} applications`}
-            </h3>
+          <div className="col-span-full text-center py-12">
+            <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No {selectedStatus} applications</h3>
             <p className="text-gray-600">
-              {selectedStatus === 'all' 
-                ? 'Start by applying for available scholarships.' 
-                : `You don't have any applications with ${selectedStatus} status.`}
+              You don't have any applications with {selectedStatus} status.
             </p>
           </div>
         )}
       </div>
 
-      {/* Modal */}
-      {showApplicationModal && (
-        <ApplicationModal
-          scholarship={selectedScholarship}
-          onSubmit={handleSubmitApplication}
-          onClose={() => {
-            setShowApplicationModal(false);
-            setSelectedScholarship(null);
-          }}
-        />
+      {/* Pagination Controls */}
+      {pagination.total_pages > 1 && (
+        <div className="flex justify-center items-center space-x-4 mt-8">
+          <button
+            onClick={() => fetchApplications(pagination.current_page - 1)}
+            disabled={!pagination.has_prev}
+            className={`px-4 py-2 rounded-lg ${
+              !pagination.has_prev
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-[#2d6179] text-white hover:bg-[#235067]'
+            }`}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700">
+            Page {pagination.current_page} of {pagination.total_pages}
+          </span>
+          <button
+            onClick={() => fetchApplications(pagination.current_page + 1)}
+            disabled={!pagination.has_next}
+            className={`px-4 py-2 rounded-lg ${
+              !pagination.has_next
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-[#2d6179] text-white hover:bg-[#235067]'
+            }`}
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   );

@@ -31,7 +31,7 @@ const ManageScholarshipForms = () => {
       const res = await getScholarshipForms({ page, limit, search: searchTerm });
       if (res.success) {
         setForms(res.data || []);
-        setTotal(res.total || 0);
+        setTotal(parseInt(res.pagination?.total_items || 0));
       } else {
         setForms([]);
       }

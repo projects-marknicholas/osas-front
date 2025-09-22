@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, FileText, Award, ClipboardList, BookOpen, Building, Users, User } from 'lucide-react';
+import { BarChart3, FileText, Award, Megaphone, ClipboardList, BookOpen, Building, Users, User } from 'lucide-react';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -12,6 +12,7 @@ const AdminSidebar = () => {
     { name: 'Scholarship Forms', href: '/admin/forms', icon: ClipboardList },
     { name: 'Course', href: '/admin/courses', icon: BookOpen },
     { name: 'Department', href: '/admin/departments', icon: Building },
+    { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
     { name: 'Accounts', href: '/admin/accounts', icon: Users },
     { name: 'Profile', href: '/admin/profile', icon: User },
   ];

@@ -490,6 +490,107 @@ export async function deleteScholarship({ scholarship_id }) {
   }
 }
 
+// Announcements
+export async function createAnnouncement({ announcement_title, announcement_description }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(`${BASE_URL}/admin/announcement`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userData.api_key || ""}`,
+        "X-CSRF-Token": userData.csrf_token || "",
+      },
+      body: JSON.stringify({ announcement_title, announcement_description }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create announcement");
+    return data;
+  } catch (err) {
+    console.error("createAnnouncement failed:", err);
+    throw err;
+  }
+}
+
+export async function getAnnouncements({ page = 1, limit = 10, search = "" }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/admin/announcement?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userData.api_key || ""}`,
+          "X-CSRF-Token": userData.csrf_token || "",
+        },
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to fetch announcements");
+    return data;
+  } catch (err) {
+    console.error("getAnnouncements failed:", err);
+    throw err;
+  }
+}
+
+export async function editAnnouncement({ announcement_id, announcement_title, announcement_description }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/admin/announcement?announcement_id=${encodeURIComponent(announcement_id)}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userData.api_key || ""}`,
+          "X-CSRF-Token": userData.csrf_token || "",
+        },
+        body: JSON.stringify({ announcement_id, announcement_title, announcement_description }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update announcement");
+    return data;
+  } catch (err) {
+    console.error("editAnnouncement failed:", err);
+    throw err;
+  }
+}
+
+export async function deleteAnnouncement({ announcement_id, delete_all = false }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const query = delete_all
+      ? `delete_all=true`
+      : `announcement_id=${encodeURIComponent(announcement_id)}`;
+
+    const res = await fetch(`${BASE_URL}/admin/announcement?${query}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userData.api_key || ""}`,
+        "X-CSRF-Token": userData.csrf_token || "",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to delete announcement");
+    return data;
+  } catch (err) {
+    console.error("deleteAnnouncement failed:", err);
+    throw err;
+  }
+}
+
 // Accounts
 export async function getAdmins({ page = 1, limit = 10, search = "", status = "all" }) {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -557,6 +658,78 @@ export async function deleteAdmin({ userId }) {
     return data;
   } catch (err) {
     console.error("deleteAdmin failed:", err);
+    throw err;
+  }
+}
+
+// Applications
+export async function getApplications({ page = 1, limit = 10, search = "", status = "all" }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/admin/applications?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userData.api_key || ""}`,
+          "X-CSRF-Token": userData.csrf_token || "",
+        },
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to fetch applications");
+    return data;
+  } catch (err) {
+    console.error("getApplications failed:", err);
+    throw err;
+  }
+}
+
+export async function updateApplication({ application_id, status }) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(`${BASE_URL}/admin/applications`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userData.api_key || ""}`,
+        "X-CSRF-Token": userData.csrf_token || "",
+      },
+      body: JSON.stringify({ application_id, status }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update application");
+    return data;
+  } catch (err) {
+    console.error("updateApplication failed:", err);
+    throw err;
+  }
+}
+
+// Dashboard
+export async function getDashboardStats(year = new Date().getFullYear()) {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  try {
+    const res = await fetch(`${BASE_URL}/admin/dashboard?year=${year}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${userData.api_key || ""}`,
+        "X-CSRF-Token": userData.csrf_token || "",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to fetch dashboard stats");
+    return data;
+  } catch (err) {
+    console.error("getDashboardStats failed:", err);
     throw err;
   }
 }

@@ -3,7 +3,7 @@ import { Mail, Shield, Edit3, Save, X } from "lucide-react";
 import {
   getProfile,
   updateProfile as updateProfileApi,
-  getDepartments,
+  getDepartments
 } from "../../api/admin";
 import Swal from "sweetalert2";
 
